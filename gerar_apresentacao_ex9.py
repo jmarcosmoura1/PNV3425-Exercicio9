@@ -40,7 +40,7 @@ _nomes = {f.name for f in font_manager.fontManager.ttflist}
 FONTE_FIG = next((n for n in ('Calibri', 'Carlito') if n in _nomes), 'DejaVu Sans')
 
 HEX = dict(azul='#0B2E40', gz='#1F6FA8', ha1='#E8702A', ha2='#7A4EAB', leve='#7F8C8D', al='#C62828',
-           agua='#D6E9F0', deck='#9AA5AB', mod='#F2B880', pont='#264D73', col='#3AA99F', cinza='#556066')
+           agua='#D6E9F0', deck='#9AA5AB', mod='#F2B880', pont='#264D73', col='#3AA99F', cinza='#556066', ok='#2E7D32')
 plt.rcParams.update({'font.family': FONTE_FIG, 'font.size': 13, 'axes.titlesize': 14, 'axes.labelsize': 13,
                      'legend.fontsize': 11.5, 'xtick.labelsize': 12, 'ytick.labelsize': 12, 'axes.grid': True,
                      'grid.color': '#E3E8EB', 'axes.spines.top': False, 'axes.spines.right': False,
@@ -148,14 +148,23 @@ def desenha_secao(ax, p, plano, fg, rotulo_gz=True):
 
 
 def fig_secoes():
-    fig, axs = plt.subplots(2, 3, figsize=(8.6, 5.4))
+    fig, axs = plt.subplots(2, 3, figsize=(8.6, 5.45))
     for i, plano in enumerate(ex9.PLANOS):
         fal = RES['base'][(plano, VEL[0])]['phi_al']
         for j, fg in enumerate([0.0, 15.0, fal]):
             desenha_secao(axs[i, j], BASE, plano, fg)
             t = f'φ = φal = {br(fg, 2)}°' if j == 2 else f'φ = {br(fg, 0)}°'
             axs[i, j].set_title(f'{plano} · {t}', fontsize=12)
-    fig.tight_layout(pad=0.4, h_pad=0.6, w_pad=0.4)
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    leg = [Patch(fc=HEX['gz'], alpha=0.55, label='volume submerso'),
+           Patch(fc='white', ec=HEX['azul'], label='pontoons e colunas (projeção 2D)'),
+           Line2D([], [], marker='o', ls='', color=HEX['gz'], label='B (centro de carena)'),
+           Line2D([], [], marker='D', ls='', color=HEX['azul'], label='G'),
+           Line2D([], [], marker='v', ls='', color=HEX['al'], label='borda do convés')]
+    fig.legend(handles=leg, loc='lower center', ncol=5, fontsize=10, frameon=False, handlelength=1.2,
+               columnspacing=1.0)
+    fig.tight_layout(pad=0.4, h_pad=0.6, w_pad=0.4, rect=(0, 0.045, 1, 1))
     salva(fig, 'secoes_2d.png')
 
     fig, axs = plt.subplots(1, 2, figsize=(5.6, 2.55))
@@ -168,59 +177,124 @@ def fig_secoes():
 
 
 def fig_gz_planos():
+    """GZ dos dois planos com cores distintas, cada curva só até o seu φal, e as duas referências analíticas."""
     fig, ax = plt.subplots(figsize=(8.0, 5.3))
-    KM_GM = HB['KM_T'] - KGB
-    for plano, ls in zip(ex9.PLANOS, ['-', '--']):
+    GM = HB['KM_T'] - KGB
+    cores = {'Transversal': HEX['gz'], 'Longitudinal': HEX['ha1']}
+    f = np.radians(np.arange(0, 50.1, 0.5))
+    ax.plot(np.degrees(f), GM * np.sin(f), '-', color='#C5CCD0', lw=1.6, label='GM sen φ (só estabilidade inicial)')
+    ax.plot(np.degrees(f), np.sin(f) * (GM + HB['BM_T'] / 2 * np.tan(f) ** 2), ':', color='#555', lw=2,
+            label='costado vertical: sen φ (GM + ½ BM tan²φ)')
+    for plano in ex9.PLANOS:
         r = RES['base'][(plano, VEL[0])]
         val = r['phi'] <= r['phi_al'] + 1e-9
-        ax.plot(r['phi'][val], r['GZ'][val], ls, color=HEX['gz'], lw=2.8, label=f'GZ {plano.lower()}')
-        ax.plot(r['phi'][~val], r['GZ'][~val], ls, color=HEX['gz'], lw=1.4, alpha=0.45)
-        ax.axvline(r['phi_al'], color=HEX['al'], ls=ls, lw=1.2)
-        ax.text(r['phi_al'] + 0.5, 0.35 if plano == 'Transversal' else 1.05,
-                f'φal {plano[:5].lower()}. = {br(r["phi_al"], 1)}°', color=HEX['al'], fontsize=11.5)
-    f = np.radians(np.arange(0, 50.1, 0.5))
-    ax.plot(np.degrees(f), np.sin(f) * (KM_GM + HB['BM_T'] / 2 * np.tan(f) ** 2), ':', color='#555', lw=1.8,
-            label='costado vertical: sen φ (GM + BM tan²φ / 2)')
-    ax.plot(np.degrees(f), KM_GM * np.sin(f), '-.', color='#9AA5AB', lw=1.5, label='GM sen φ')
+        c = cores[plano]
+        ax.plot(r['phi'][val], r['GZ'][val], color=c, lw=3, label=f'GZ {plano.lower()} (até φal = {br(r["phi_al"], 1)}°)')
+        ax.plot(r['phi'][~val], r['GZ'][~val], color=c, lw=1.3, alpha=0.35)
+        ax.plot(r['phi_al'], r['GZ'][val][-1], 'o', color=c, ms=8, mec='white', mew=1.5, zorder=5)
+    # emersão do topo do pontoon de barlavento (≈ 17° nos dois planos)
+    ax.axvline(17.0, color=HEX['cinza'], lw=1, ls='--')
+    ax.annotate('17°: o topo do pontoon de barlavento\nchega à linha d\'água (nos dois planos)',
+                xy=(17.0, 1.8), xytext=(19.5, 0.55), fontsize=11, color=HEX['cinza'],
+                arrowprops=dict(arrowstyle='->', color=HEX['cinza']))
+    ax.text(41.5, 1.9, 'traço claro: acima de φal\n(convés na água, fora da validade)', ha='center', va='top',
+            fontsize=10.5, color=HEX['cinza'])
     ax.set(xlim=(0, 50), ylim=(0, 9), xlabel='ângulo de inclinação φ [°]', ylabel='GZ [m]')
     ax.legend(loc='upper left')
-    ax.text(49.5, 8.7, 'traço claro: acima de φal (fora da validade)', ha='right', fontsize=10.5, color=HEX['cinza'])
     fig.tight_layout()
     salva(fig, 'gz_planos.png')
 
 
+def fig_ha_componentes():
+    """HA(φ) decomposto: HM0 cos φ (convés, módulos e colunas) e HMud sen φ (face inferior do convés)."""
+    r = RES['base'][('Transversal', VEL[0])]
+    phi = np.linspace(0, 50, 201)
+    f = np.radians(phi)
+    c0 = r['HM0'] * np.cos(f) / (r['desloc'] * ex9.G)
+    cu = r['HMud'] * np.sin(f) / (r['desloc'] * ex9.G)
+    fig, ax = plt.subplots(figsize=(5.8, 3.6))
+    ax.stackplot(phi, c0, cu, colors=['#F6C39B', HEX['ha1']], alpha=0.9,
+                 labels=['HM0 cos φ / Δg  (colunas, deck box, módulos)', 'HMud sen φ / Δg  (face inferior do convés)'])
+    ax.plot(phi, c0 + cu, color='#8a3c0c', lw=2.2, label='HA total')
+    ax.axvline(r['phi_al'], color=HEX['al'], ls='--', lw=1.4)
+    ax.text(r['phi_al'] + 0.7, 0.08, f'φal = {br(r["phi_al"], 1)}°', color=HEX['al'], fontsize=11, fontweight='bold')
+    ax.set(xlim=(0, 50), ylim=(0, 2.25), xlabel='φ [°]', ylabel='HA [m]',
+           title='Transversal · 51,5 m/s')
+    ax.legend(loc='upper left', fontsize=10)
+    fig.tight_layout(pad=0.4)
+    salva(fig, 'ha_componentes.png')
+
+
+def fig_ab(casos):
+    """Razão A/B por plano e velocidade, com o mínimo de 1,3: o resultado do critério em uma figura."""
+    rot = [f'{pl}\n{br(V, 1)} m/s' for pl in ex9.PLANOS for V in VEL]
+    nomes = {'base': 'enunciado', 'leve': 'menor peso (Ex. 8)'}
+    cores = {'base': HEX['gz'], 'leve': HEX['ha1']}
+    larg = 0.8 / len(casos)
+    fig, ax = plt.subplots(figsize=(5.8, 2.95))
+    x = np.arange(4)
+    for k, caso in enumerate(casos):
+        ab = [RES[caso][(pl, V)]['AB'] for pl in ex9.PLANOS for V in VEL]
+        xs = x - 0.4 + larg * (k + 0.5)
+        ax.bar(xs, ab, larg * 0.92, color=cores[caso], label=nomes[caso], zorder=3)
+        for xi, v in zip(xs, ab):
+            ax.text(xi, v + 0.06, br(v, 2), ha='center', va='bottom', fontsize=10.5,
+                    color=HEX['ok'] if v >= 1.3 else HEX['al'], fontweight='bold')
+    ax.axhline(1.3, color=HEX['al'], lw=1.8, ls='--', zorder=4)
+    ax.text(-0.47, 1.38, 'mínimo 1,3', color=HEX['al'], ha='left', fontsize=10.5, fontweight='bold', zorder=5,
+            bbox=dict(fc='white', ec='none', alpha=0.85, pad=1))
+    ax.set_xticks(x, rot, fontsize=10.5)
+    ax.set_ylabel('A / B')
+    ax.set_ylim(0, max(RES[c][(pl, V)]['AB'] for c in casos for pl in ex9.PLANOS for V in VEL) * 1.18)
+    ax.grid(axis='x', visible=False)
+    if len(casos) > 1:
+        ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=10, frameon=False)
+    fig.tight_layout(pad=0.4)
+    salva(fig, f'ab_{"_".join(casos)}.png')
+
+
 def fig_gz_ha(caso, plano):
+    """GZ × HA: área A (azul, sob GZ) e área B (hachurada, sob HA de 51,5 m/s), ambas de 0 a φal.
+    A faixa acima de φal fica cinza: ali o convés está na água e a curva GZ do modelo não vale."""
     fig, ax = plt.subplots(figsize=(8.3, 5.3))
     r1, r2 = RES[caso][(plano, VEL[0])], RES[caso][(plano, VEL[1])]
     phi, GZ = r1['phi'], r1['GZ']
     fal = r1['phi_al']
     val = phi <= fal + 1e-9
-    ax.fill_between(phi[val], 0, GZ[val], color=HEX['gz'], alpha=0.13, lw=0)
-    ax.fill_between(phi[val], 0, r1['HA'][val], color=HEX['ha1'], alpha=0.22, lw=0)
-    ax.plot(phi[val], GZ[val], color=HEX['gz'], lw=2.8, label='GZ')
-    ax.plot(phi[phi >= phi[val][-1]], GZ[phi >= phi[val][-1]], ':', color=HEX['gz'], lw=2,
-            label='GZ acima de φal (fora da validade)')
+    ymax = max(GZ[val].max(), r1['HA'].max()) * (1.25 if caso == 'base' else 1.12)
+    ax.axvspan(fal, 50, color='#EEF1F3', zorder=0, lw=0)
+    ax.text((fal + 50) / 2, ymax * 0.97, 'acima de φal: convés na água\n(curva GZ do modelo não vale)',
+            ha='center', va='top', fontsize=11, color=HEX['cinza'])
+    ax.fill_between(phi[val], 0, GZ[val], color=HEX['gz'], alpha=0.22, lw=0,
+                    label=f'A = área sob GZ = {br(r1["A"], 3)} m·rad')
+    ax.fill_between(phi[val], 0, r1['HA'][val], facecolor='none', edgecolor=HEX['ha1'], hatch='///', lw=0,
+                    label=f'B = área sob HA {br(VEL[0], 1)} m/s = {br(r1["B"], 3)} m·rad')
+    ax.plot(phi[val], GZ[val], color=HEX['gz'], lw=3, label='GZ')
+    ax.plot(phi[~val], GZ[~val], ':', color=HEX['gz'], lw=1.8, alpha=0.6)
     for r, cor in ((r1, HEX['ha1']), (r2, HEX['ha2'])):
-        ax.plot(phi, r['HA'], color=cor, lw=2.4, label=f'HA – {br(r["V"], 1)} m/s  (A/B = {br(r["AB"], 2)})')
+        ax.plot(phi, r['HA'], color=cor, lw=2.6 if r is r1 else 2,
+                label=f'HA {br(r["V"], 1)} m/s  →  A/B = {br(r["AB"], 2)}')
         for nome, x, dy in (('φ1', r['phi1'], -18), ('φ2', r['phi2'], 8)):
             if x is not None:
+                fora = x > fal
                 y = np.interp(x, phi, GZ)
-                ax.plot(x, y, 'x', color='black', ms=9, mew=2.2, zorder=5)
-                ax.annotate(f'{nome} = {br(x, 1)}°', (x, y), textcoords='offset points', xytext=(7, dy), fontsize=11.5,
+                ax.plot(x, y, 'o' if fora else 'X', ms=8, mew=1.5, zorder=5,
+                        mfc='white' if fora else 'black', mec='#777' if fora else 'black')
+                ax.annotate(f'{nome} = {br(x, 1)}°' + ('*' if fora else ''), (x, y), textcoords='offset points',
+                            xytext=(7, dy), fontsize=11.5, color='#777' if fora else 'black',
                             bbox=dict(fc='white', ec='none', alpha=0.85, pad=1))
-    ax.axvline(fal, color=HEX['al'], ls='--', lw=1.6)
-    ymax = max(GZ.max(), r1['HA'].max()) * 1.08
-    ax.set(xlim=(0, 50), ylim=(0, ymax), xlabel='ângulo de inclinação φ [°]', ylabel='braço [m]')
-    ax.text(fal + 0.6, ymax * (0.94 if caso == 'base' else 0.84), f'φal = {br(fal, 2)}°', color=HEX['al'],
+    ax.axvline(fal, color=HEX['al'], ls='--', lw=1.8)
+    ax.text(fal - 0.6, ymax * 0.97, f'φal = {br(fal, 2)}°', color=HEX['al'], ha='right', va='top',
             fontsize=12.5, fontweight='bold', zorder=12, bbox=dict(fc='white', ec='none', alpha=0.85, pad=1))
-    if caso == 'base':      # GZ baixo à esquerda: legenda no canto superior esquerdo, abaixo do quadro de áreas
-        leg = ax.legend(loc='upper left', bbox_to_anchor=(0.005, 0.905))
-    else:                   # GZ pequeno e HA alto: legenda embaixo à direita, onde não há curvas
-        leg = ax.legend(loc='lower right', bbox_to_anchor=(0.995, 0.02))
+    ax.set(xlim=(0, 50), ylim=(0, ymax), xlabel='ângulo de inclinação φ [°]', ylabel='braço [m]')
+    if any(x is not None and x > fal for rr in (r1, r2) for x in (rr['phi1'], rr['phi2'])):
+        ax.text((fal + 50) / 2, ymax * 0.84, '* intercepto nesta faixa: só indicativo', ha='center', va='top',
+                fontsize=10.5, color='#777')
+    if caso == 'base':
+        leg = ax.legend(loc='upper left', bbox_to_anchor=(0.005, 0.86), fontsize=11)
+    else:
+        leg = ax.legend(loc='lower right', bbox_to_anchor=(0.995, 0.02), fontsize=11)
     leg.set_zorder(10)
-    ax.text(0.012, 0.975, f'A = {br(r1["A"], 3)} m·rad   ·   B({br(VEL[0], 1)} m/s) = {br(r1["B"], 3)} m·rad',
-            transform=ax.transAxes, fontsize=12, va='top', color=HEX['azul'], zorder=11,
-            bbox=dict(fc='white', ec='#D0D7DB', pad=4))
     fig.tight_layout()
     salva(fig, f'gz_ha_{caso}_{plano.lower()}.png')
 
@@ -280,6 +354,9 @@ def figuras():
             fig_gz_ha(caso, plano)
     fig_comparacao()
     fig_parcelas()
+    fig_ha_componentes()
+    fig_ab(['base'])
+    fig_ab(['base', 'leve'])
 
 
 # ======================================================================== apresentação
@@ -428,9 +505,14 @@ def tab_vento(caso, plano):
 
 
 def tab_resumo(caso, gz=True):
+    """Resumo do critério; interceptos acima de φal levam '*' (a curva GZ não vale ali)."""
     df = ex9.resumo(RES[caso])
+
+    def ang(col):
+        return [br(x, 2) + ('*' if not np.isnan(x) and x > fa else '') for x, fa in zip(df[col], df['φal [°]'])]
+
     out = pd.DataFrame({'Plano': df['Plano'], 'V [m/s]': df['V [m/s]'].map(lambda x: br(x, 1)),
-                        'φ1 [°]': df['φ1 [°]'].map(lambda x: br(x, 2)), 'φ2 [°]': df['φ2 [°]'].map(lambda x: br(x, 2)),
+                        'φ1 [°]': ang('φ1 [°]'), 'φ2 [°]': ang('φ2 [°]'),
                         'φal [°]': df['φal [°]'].map(lambda x: br(x, 2)),
                         'A [m·rad]': df['A [m·rad]'].map(lambda x: br(x, 3)),
                         'B [m·rad]': df['B [m·rad]'].map(lambda x: br(x, 3)), 'A/B': df['A/B'].map(lambda x: br(x, 2)),
@@ -442,9 +524,24 @@ def frase_intercepto(r):
     if r['phi1'] is None:
         return (f'{br(r["V"], 1)} m/s: HA > GZ de 0° a 50° (sem φ1: não há ângulo de equilíbrio), '
                 f'A/B = {br(r["AB"], 2)} → NÃO atende.')
+    fal = r['phi_al']
+    if r['phi1'] > fal:
+        return (f'{br(r["V"], 1)} m/s: GZ < HA em toda a faixa válida; os interceptos ({br(r["phi1"], 1)}° e '
+                f'{br(r["phi2"], 1)}°) ficam acima de φal, fora da validade. A/B = {br(r["AB"], 2)} → NÃO atende.')
     s = f'{br(r["V"], 1)} m/s: φ1 = {br(r["phi1"], 2)}°'
-    s += f', φ2 = {br(r["phi2"], 2)}°' if r['phi2'] is not None else ', sem φ2 até 50°'
+    if r['phi2'] is None:
+        s += ', sem φ2 até 50°'
+    else:
+        s += f', φ2 = {br(r["phi2"], 2)}°' + (' (acima de φal)' if r['phi2'] > fal else '')
     return s + f', A/B = {br(r["AB"], 2)} → {"atende" if r["atende"] else "NÃO atende"}.'
+
+
+def nota_asterisco(s, y):
+    tf = s.shapes.add_textbox(Inches(0.55), Inches(y), Inches(12.25), Inches(0.3)).text_frame
+    r = tf.paragraphs[0].add_run()
+    r.text = ('* intercepto acima de φal: obtido com a curva GZ fora da sua validade (convés na água); '
+              'serve só como indicação.')
+    run_fmt(r, 11.5, rgb('#777777'), italic=True)
 
 
 def montar():
@@ -538,15 +635,18 @@ def montar():
     rt, rl = RES['base'][('Transversal', VEL[0])], RES['base'][('Longitudinal', VEL[0])]
     s = slide('Curva GZ de 0° a 50° nos dois planos', 'Caso do enunciado, KG = 34,29 m', 'GZ')
     imagem(s, 'gz_planos.png', 0.45, 1.45, w=8.0)
-    texto(s, ['Até ~17° as curvas coincidem com a fórmula de costado vertical: só as colunas cortam a linha d\'água.',
-              'Na transversal o pontoon de barlavento emerge antes; a carena migra para sotavento e GZ cresce mais rápido.',
-              f'φal = {br(rt["phi_al"], 2)}° (transversal) e {br(rl["phi_al"], 2)}° (longitudinal).',
-              'Acima de φal o convés entraria na água; o modelo não o inclui como volume.'],
+    texto(s, ['Até 17° as duas curvas seguem a fórmula de costado vertical: só as colunas cortam a linha d\'água.',
+              'Em 17° o topo do pontoon de barlavento chega à água nos dois planos. A partir daí:',
+              '  transversal: o pontoon tem só bp = 15 m de largura e sai da água rápido; a carena migra para '
+              'sotavento e GZ cresce mais;',
+              '  longitudinal: o pontoon ocupa todo o comprimento Lp e emerge aos poucos; GZ fica perto da fórmula.',
+              f'φal = {br(rt["phi_al"], 2)}° (transversal) e {br(rl["phi_al"], 2)}° (longitudinal). '
+              'Acima disso o convés entraria na água e o modelo não vale.'],
           8.75, 1.5, 4.25, 5.4, tam=15)
 
     # ---------------------------------------------------------------- 7 vento
     s = slide('3) a 5) Forças de vento, z_CLR, HM0 e HMud',
-              'F = ½ ρar Cs Ch A V², ρar = 1,222 kg/m³ · braço = h + T − z_CLR', 'Vento')
+              'F = ½ ρ Cs Ch A V² (ρ do ar = 1,222 kg/m³) · braço = h + T − z_CLR', 'Vento')
     clr = pd.DataFrame([[pl, br(ex9.z_clr(BASE, pl)[1]['Área [m²]'].iloc[0]), br(ex9.z_clr(BASE, pl)[1]['Área [m²]'].iloc[1]),
                          br(RES['base'][(pl, VEL[0])]['z_CLR'], 2),
                          br(RES['base'][(pl, VEL[0])]['HM0'] / 1e3, 1), br(RES['base'][(pl, VEL[0])]['HMud'] / 1e3, 1),
@@ -554,17 +654,17 @@ def montar():
                         for pl in ex9.PLANOS],
                        columns=['Plano', 'A pontoon [m²]', 'A colunas [m²]', 'z_CLR [m]', 'HM0 51,5 [MN·m]',
                                 'HMud 51,5 [MN·m]', 'HM0 36 [MN·m]', 'HMud 36 [MN·m]'])
-    tabela(s, clr, 0.55, 1.5, 12.25, tam=13.5, alt_lin=0.5)
+    tabela(s, clr, 0.55, 1.5, 12.25, tam=13.5, alt_lin=0.46)
     ch = pd.DataFrame([['Ch', '1,00', '1,10', '1,20', '1,30', '1,37']],
-                      columns=['h [m]', 'até 15,3', '15,3–30,5', '30,5–46,0', '46,0–61,0', '61,0–76,0'])
-    tabela(s, ch, 0.55, 3.2, 6.2, tam=13, alt_lin=0.42)
-    texto(s, ['Áreas iguais nos dois planos (convés quadrado): colunas 4bc·a = 1.800 m², deck box Lp·hd = 800 m², '
-              'módulos Lp·hm = 1.500 m² (Cs = 1,1), face inferior Lp² = 10.000 m² (× sen φ).',
-              'Ch no centroide: colunas 15 m → 1,00; deck box 34 m → 1,20; módulos 45,5 m → 1,20; face inferior 30 m → 1,10.',
-              'z_CLR muda com o plano: na transversal o pontoon aparece de lado (Lp·hp); na longitudinal, só as '
-              'seções (2bp·hp). z_CLR mais baixo dá braços transversais maiores.',
-              'HM ∝ V²: de 51,5 para 36 m/s os momentos caem para (36/51,5)² = 49%.'],
-          0.55, 4.25, 12.25, 2.7, tam=15, espaco=5)
+                      columns=['h [m]', '≤ 15,3', '15,3–30,5', '30,5–46,0', '46,0–61,0', '61,0–76,0'])
+    tabela(s, ch, 0.55, 3.08, 6.2, tam=12.5, alt_lin=0.38)
+    texto(s, ['Áreas iguais nos dois planos (convés quadrado): colunas 1.800 m², deck box 800 m², '
+              'módulos 1.500 m² (Cs = 1,1) e face inferior 10.000 m² (× sen φ).',
+              'Ch no centroide: colunas (15 m) 1,00; deck box (34 m) e módulos (45,5 m) 1,20; face inferior (30 m) 1,10.',
+              'z_CLR mais baixo na transversal (o pontoon aparece de lado) → braços maiores.',
+              'HM ∝ V²: em 36 m/s os momentos são 49% dos de 51,5 m/s.'],
+          0.55, 4.0, 6.2, 3.0, tam=13.5, espaco=4)
+    imagem(s, 'ha_componentes.png', 7.0, 3.08, w=5.8)
 
     # ---------------------------------------------------------------- 8–9 tabelas de vento
     for plano in ex9.PLANOS:
@@ -595,15 +695,17 @@ def montar():
     # ---------------------------------------------------------------- 12 resumo base
     s = slide('Resumo do critério de áreas – caso do enunciado',
               'A ≥ 1,3 B e GZ > 0 de 0° a φ2 (ou φal, se φ2 não ocorrer antes)', 'Critério')
-    tabela(s, tab_resumo('base'), 0.55, 1.5, 12.25, larg=[1.4, 0.9, 0.9, 0.9, 0.9, 1, 1, 0.8, 0.8, 1.3],
-           tam=14, alt_lin=0.5, destaque=DEST)
+    tabela(s, tab_resumo('base'), 0.55, 1.45, 12.25, larg=[1.4, 0.9, 0.9, 0.9, 0.9, 1, 1, 0.8, 0.8, 1.3],
+           tam=14, alt_lin=0.42, destaque=DEST)
+    nota_asterisco(s, 3.58)
     ab = [r['AB'] for r in RES['base'].values()]
-    texto(s, [f'A plataforma do enunciado atende nos dois planos e nas duas velocidades (A/B de {br(min(ab), 2)} a '
-              f'{br(max(ab), 2)}, contra 1,3 exigido).',
-              'Com 51,5 m/s, o plano longitudinal tem o menor A/B: φal é maior, mas a área sob GZ quase não cresce '
-              'e a área sob HA acompanha φal.',
-              'HA cresce com φ por causa da face inferior do convés (HMud sen φ); em φal essa parcela já supera HM0 cos φ.'],
-          0.55, 4.3, 12.25, 2.6, tam=15.5)
+    texto(s, [f'Atende nos dois planos e nas duas velocidades: A/B de {br(min(ab), 2)} a {br(max(ab), 2)}, '
+              'contra 1,3 exigido.',
+              'Com 51,5 m/s o plano longitudinal tem o menor A/B: φal é maior, mas A quase não cresce '
+              '(0,977 contra 0,974) e B aumenta com a faixa de integração.',
+              'φ2 só aparece acima de φal; a verificação GZ > 0 vai de 0° a φal.'],
+          0.55, 4.05, 6.2, 2.9, tam=14.5)
+    imagem(s, 'ab_base.png', 7.0, 3.98, w=5.8)
 
     # ---------------------------------------------------------------- 13 casco de menor peso
     s = slide('Solução de menor peso de casco (Exercício 8)',
@@ -622,7 +724,7 @@ def montar():
               f'{br(100 * (1 - HL["desloc"] / HB["desloc"]), 0)}% e o lastro some.',
               f'O topside ({br(ex9.topside(LEVE))} t) passa a dominar: KG sobe {br(KGL - KGB, 2)} m e GM fica no mínimo.',
               f'Air gap de {br(LEVE.a, 2)} m: o convés toca a água em φal = {br(RES["leve"][("Transversal", VEL[0])]["phi_al"], 1)}°, '
-              'menos da metade do caso do enunciado.'],
+              f'pouco mais da metade dos {br(RES["base"][("Transversal", VEL[0])]["phi_al"], 1)}° do enunciado.'],
           6.6, 4.2, 6.3, 2.7, tam=14.5)
 
     # ---------------------------------------------------------------- 14–15 GZ x HA leve
@@ -635,19 +737,22 @@ def montar():
         cartao(s, 11.05, 1.5, 1.9, 1.1, 'A/B 36 m/s', br(r2['AB'], 2), cor=HEX['al'] if not r2['atende'] else HEX['ha2'])
         texto(s, [frase_intercepto(r1), frase_intercepto(r2),
                   f'A = {br(r1["A"], 3)} m·rad: com GM ≈ 1 m e φal = {br(r1["phi_al"], 1)}°, a área sob GZ é '
-                  f'{br(RES["base"][(plano, VEL[0])]["A"] / r1["A"], 0)} vezes menor que a do enunciado.'],
+                  'cerca de 20 vezes menor que a do enunciado.'],
               9.0, 2.85, 4.0, 4.1, tam=14.5)
 
     # ---------------------------------------------------------------- 16 resumo leve
     s = slide('Resumo do critério de áreas – casco de menor peso',
               'Mesmos critérios: A ≥ 1,3 B e GZ > 0 até φ2 ou φal', 'Menor peso')
-    tabela(s, tab_resumo('leve'), 0.55, 1.5, 12.25, larg=[1.4, 0.9, 0.9, 0.9, 0.9, 1, 1, 0.8, 0.8, 1.3],
-           tam=14, alt_lin=0.5, destaque=DEST)
+    tabela(s, tab_resumo('leve'), 0.55, 1.45, 12.25, larg=[1.4, 0.9, 0.9, 0.9, 0.9, 1, 1, 0.8, 0.8, 1.3],
+           tam=14, alt_lin=0.42, destaque=DEST)
+    nota_asterisco(s, 3.58)
     abl = [r['AB'] for r in RES['leve'].values()]
     texto(s, [f'Não atende em nenhum plano nem velocidade: A/B entre {br(min(abl), 2)} e {br(max(abl), 2)}.',
-              'Mesmo no vento de operação normal (70 nós) a área sob GZ até φal não chega à metade da área sob HA.',
-              'GZ continua positivo até φal; a falha é só pela razão de áreas.'],
-          0.55, 4.3, 12.25, 2.6, tam=15.5)
+              'Mesmo a 36 m/s (70 nós) a área sob GZ até φal é menos da metade da área sob HA.',
+              'Nos quatro casos GZ < HA em toda a faixa válida (0 a φal): não há ângulo de equilíbrio antes do alagamento.',
+              'GZ continua positivo até φal; a falha é pela razão de áreas.'],
+          0.55, 4.05, 6.2, 2.9, tam=14.5)
+    imagem(s, 'ab_base_leve.png', 7.0, 3.98, w=5.8)
 
     # ---------------------------------------------------------------- 17 comentários
     s = slide('Comentários', secao='Conclusão')
