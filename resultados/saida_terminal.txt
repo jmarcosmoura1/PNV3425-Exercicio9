@@ -1,0 +1,112 @@
+Otimização do Exercício 8: Optimization terminated successfully 
+
+                      Original  Otimizado  Evolução (%)
+Lp (m)                 100.000     99.597        -0.403
+bp (m)                  15.000     10.000       -33.333
+hp (m)                  15.000     10.000       -33.333
+bc (m)                  15.000     10.000       -33.333
+hc (m)                  45.000     30.000       -33.333
+T (m)                   30.000     27.210        -9.301
+Peso Topside (t)    16,932.000 16,932.000         0.000
+Peso Casco (t)      23,085.000  8,618.254       -62.667
+Peso Risers (t)      2,398.500  1,098.936       -54.182
+Peso Amarração (t)   1,798.875    824.202       -54.182
+Peso Lastro (t)     15,748.125     -0.000      -100.000
+Δ (t)               59,962.500 27,473.391       -54.182
+KG (m)                  34.294     37.542         9.471
+GM_T (m)                 4.744      1.026       -78.365
+GM_L (m)                 4.744      1.026       -78.365
+Air gap (m)             30.000     12.790       -57.365
+Área de convés (m²) 10,000.000  9,919.620        -0.804
+==================================================================================================== 
+Caso base (Ex. 9): {'Lp': 100.0, 'bp': 15.0, 'hp': 15.0, 'bc': 15.0, 'hc': 45.0, 'T': 30.0, 'BOE': 120000.0, 'gamma_e': 0.27, 'hd': 8.0, 'hm': 15.0, 'KG': None, 'rho': 1.02, 'c_pl': 0.08, 'f_co': 0.35, 'f_op': 0.35, 'dz_top': 10.0, 'f_ris': 0.04, 'f_amr': 0.03}
+Δ = 59,962 t   KB = 10.96 m   KM_T = 39.04 m   KG = 34.29 m   GM = 4.74 m   air gap = 30.0 m   peso do casco = 23,085 t
+               Item   Peso [t]  KG item [m]  Momento [t·m]
+ Planta de processo  9,960.000       70.000    697,200.000
+Estrutura do convés  3,486.000       70.000    244,020.000
+   Peso operacional  3,486.000       70.000    244,020.000
+     Pontoons (aço) 12,150.000        7.500     91,125.000
+      Colunas (aço) 10,935.000       37.500    410,062.500
+             Risers  2,398.500       60.000    143,910.000
+          Amarração  1,798.875       60.000    107,932.500
+             Lastro 15,748.125        7.500    118,110.937
+
+--- Transversal: z_CLR = 10.96 m, φal = 27.58°
+V = 51.5 m/s: HM0 = 388,881 kN·m, HMud = 874,148 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch     F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas  1,800.000 15.000 1.000 1.000  2,916.945     34.038      99,288.305
+                         Deck box    800.000 34.000 1.000 1.200  1,555.704     53.038      82,512.134
+               Módulos de topside  1,500.000 45.500 1.100 1.200  3,208.639     64.538     207,080.625
+Face inferior do convés (× sen φ) 10,000.000 30.000 1.000 1.100 17,825.772     49.038     874,148.447
+V = 36.0 m/s: HM0 = 190,024 kN·m, HMud = 427,145 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch    F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas  1,800.000 15.000 1.000 1.000 1,425.341     34.038      48,516.408
+                         Deck box    800.000 34.000 1.000 1.200   760.182     53.038      40,318.871
+               Módulos de topside  1,500.000 45.500 1.100 1.200 1,567.875     64.538     101,188.233
+Face inferior do convés (× sen φ) 10,000.000 30.000 1.000 1.100 8,710.416     49.038     427,145.400
+
+--- Longitudinal: z_CLR = 15.00 m, φal = 30.40°
+V = 51.5 m/s: HM0 = 357,860 kN·m, HMud = 802,160 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch     F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas  1,800.000 15.000 1.000 1.000  2,916.945     30.000      87,508.336
+                         Deck box    800.000 34.000 1.000 1.200  1,555.704     49.000      76,229.484
+               Módulos de topside  1,500.000 45.500 1.100 1.200  3,208.639     60.500     194,122.660
+Face inferior do convés (× sen φ) 10,000.000 30.000 1.000 1.100 17,825.772     45.000     802,159.751
+V = 36.0 m/s: HM0 = 174,866 kN·m, HMud = 391,969 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch    F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas  1,800.000 15.000 1.000 1.000 1,425.341     30.000      42,760.224
+                         Deck box    800.000 34.000 1.000 1.200   760.182     49.000      37,248.906
+               Módulos de topside  1,500.000 45.500 1.100 1.200 1,567.875     60.500      94,856.430
+Face inferior do convés (× sen φ) 10,000.000 30.000 1.000 1.100 8,710.416     45.000     391,968.720
+
+       Plano  V [m/s]  V [nós]  φ1 [°]  φ2 [°]  φal [°]  A [m·rad]  B [m·rad]   A/B A ≥ 1,3B GZ > 0 Critério
+ Transversal   51.500  100.117  10.117  46.730   27.576      0.974      0.475 2.051      sim    sim   ATENDE
+ Transversal   36.000   69.984   4.500  48.501   27.576      0.974      0.232 4.198      sim    sim   ATENDE
+Longitudinal   51.500  100.117   9.215  46.605   30.395      0.977      0.495 1.973      sim    sim   ATENDE
+Longitudinal   36.000   69.984   4.097  48.226   30.395      0.977      0.242 4.037      sim    sim   ATENDE
+==================================================================================================== 
+Menor peso de casco (Ex. 8): {'Lp': 99.6, 'bp': 10.0, 'hp': 10.0, 'bc': 10.0, 'hc': 30.0, 'T': 27.21, 'BOE': 120000.0, 'gamma_e': 0.27, 'hd': 8.0, 'hm': 15.0, 'KG': None, 'rho': 1.02, 'c_pl': 0.08, 'f_co': 0.35, 'f_op': 0.35, 'dz_top': 10.0, 'f_ris': 0.04, 'f_amr': 0.03}
+Δ = 27,473 t   KB = 8.49 m   KM_T = 38.57 m   KG = 37.54 m   GM = 1.03 m   air gap = 12.8 m   peso do casco = 8,618 t
+               Item  Peso [t]  KG item [m]  Momento [t·m]
+ Planta de processo 9,960.000       50.000    498,000.000
+Estrutura do convés 3,486.000       50.000    174,300.000
+   Peso operacional 3,486.000       50.000    174,300.000
+     Pontoons (aço) 5,378.254        5.000     26,891.268
+      Colunas (aço) 3,240.000       25.000     81,000.000
+             Risers 1,098.936       40.000     43,957.426
+          Amarração   824.202       40.000     32,968.069
+             Lastro    -0.000        5.000         -0.000
+
+--- Transversal: z_CLR = 8.49 m, φal = 14.40°
+V = 51.5 m/s: HM0 = 208,948 kN·m, HMud = 506,457 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch     F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas    511.615  6.395 1.000 1.000    829.085     25.111      20,818.906
+                         Deck box    796.778 16.790 1.000 1.100  1,420.319     35.506      50,429.697
+               Módulos de topside  1,493.959 28.290 1.100 1.100  2,929.408     47.006     137,699.438
+Face inferior do convés (× sen φ)  9,919.620 12.790 1.000 1.000 16,074.990     31.506     506,456.983
+V = 36.0 m/s: HM0 = 102,101 kN·m, HMud = 247,476 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch    F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas    511.615  6.395 1.000 1.000   405.125     25.111      10,172.986
+                         Deck box    796.778 16.790 1.000 1.100   694.027     35.506      24,642.054
+               Módulos de topside  1,493.959 28.290 1.100 1.100 1,431.431     47.006      67,285.690
+Face inferior do convés (× sen φ)  9,919.620 12.790 1.000 1.000 7,854.911     31.506     247,476.011
+
+--- Longitudinal: z_CLR = 13.60 m, φal = 14.40°
+V = 51.5 m/s: HM0 = 182,481 kN·m, HMud = 424,302 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch     F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas    511.615  6.395 1.000 1.000    829.085     20.000      16,581.694
+                         Deck box    796.778 16.790 1.000 1.100  1,420.319     30.395      43,170.858
+               Módulos de topside  1,493.959 28.290 1.100 1.100  2,929.408     41.895     122,728.082
+Face inferior do convés (× sen φ)  9,919.620 12.790 1.000 1.000 16,074.990     26.395     424,302.359
+V = 36.0 m/s: HM0 = 89,168 kN·m, HMud = 207,332 kN·m
+                          Parcela  Área [m²]  h [m]    Cs    Ch    F [kN]  Braço [m]  Momento [kN·m]
+                          Colunas    511.615  6.395 1.000 1.000   405.125     20.000       8,102.507
+                         Deck box    796.778 16.790 1.000 1.100   694.027     30.395      21,095.082
+               Módulos de topside  1,493.959 28.290 1.100 1.100 1,431.431     41.895      59,970.061
+Face inferior do convés (× sen φ)  9,919.620 12.790 1.000 1.000 7,854.911     26.395     207,331.834
+
+       Plano  V [m/s]  V [nós]  φ1 [°]  φ2 [°]  φal [°]  A [m·rad]  B [m·rad]   A/B A ≥ 1,3B GZ > 0   Critério
+ Transversal   51.500  100.117     NaN     NaN   14.405      0.048      0.252 0.189      não    sim NÃO ATENDE
+ Transversal   36.000   69.984     NaN     NaN   14.405      0.048      0.123 0.387      não    sim NÃO ATENDE
+Longitudinal   51.500  100.117     NaN     NaN   14.405      0.048      0.218 0.218      não    sim NÃO ATENDE
+Longitudinal   36.000   69.984  14.653  15.055   14.405      0.048      0.106 0.447      não    sim NÃO ATENDE

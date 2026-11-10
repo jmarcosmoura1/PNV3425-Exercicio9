@@ -1,0 +1,7 @@
+streamlit>=1.50
+plotly
+numpy
+pandas
+scipy
+matplotlib
+python-pptx
