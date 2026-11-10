@@ -197,7 +197,8 @@ def fig_gz_planos():
     ax.annotate('17°: o topo do pontoon de barlavento\nchega à linha d\'água (nos dois planos)',
                 xy=(17.0, 1.8), xytext=(19.5, 0.55), fontsize=11, color=HEX['cinza'],
                 arrowprops=dict(arrowstyle='->', color=HEX['cinza']))
-    ax.text(41.5, 1.9, 'traço claro: acima de φal\n(convés na água, fora da validade)', ha='center', va='top',
+    ax.text(40.5, 1.9, 'traço claro: acima de φal\n(convés na água, fora da validade)', ha='center', va='top',
+            bbox=dict(fc='white', ec='none', alpha=0.85, pad=1),
             fontsize=10.5, color=HEX['cinza'])
     ax.set(xlim=(0, 50), ylim=(0, 9), xlabel='ângulo de inclinação φ [°]', ylabel='GZ [m]')
     ax.legend(loc='upper left')
